@@ -71,9 +71,9 @@ public class Package {
     }
 
     public String toString(){
-        StringBuilder sb = new StringBuilder("Package number: ");
-        sb.append(packageNumber).append(" Priority: ").append(priority);
-        sb.append(" ShiftNumber: ").append(shiftNumber);
+        StringBuilder sb = new StringBuilder("No: ");
+        sb.append(packageNumber).append(" Prior: ").append(priority);
+        sb.append(" ShiftNo: ").append(shiftNumber);
         return sb.toString();
     }
 }

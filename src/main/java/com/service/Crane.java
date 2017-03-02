@@ -23,100 +23,51 @@ public class Crane {
         nextToLastAreaField = warehouse.getArea()[warehouse.getAreaWidth() - 2][warehouse.getAreaLength() - 1];
     }
 
-    public Warehouse getWarehouse() {
-        return warehouse;
+
+    public void addPackage(Package newPackage){
+        Stack<Package> stackWithEmptySlot = findStackToInsert();
+        if(stackWithEmptySlot != null){
+            while(!stackWithEmptySlot.empty() && stackWithEmptySlot.peek().getPriority()>newPackage.getPriority()){
+                movePackage(stackWithEmptySlot.pop());
+            }
+            stackWithEmptySlot.push(newPackage);
+            insertPopedPackages(stackWithEmptySlot);
+        }
+        else {
+            return;
+        }
+
     }
 
-    public void addPackage(Package pack) {
-
+    public Stack<Package> findStackToInsert(){
+        Stack<Package> stackWithEmptySlot = null;
         for (int lengthPointer = 0; lengthPointer < warehouse.getAreaLength(); lengthPointer++) {
             for (int widthPointer = 0; widthPointer < warehouse.getAreaWidth(); widthPointer++) {
-
-                if (isWarehouseFull(widthPointer,lengthPointer)) { // sprawdzenie czy nie zapelniam przedostaniego i ostatneigo miejsca
-                    craneLogger.info("All warehouse is full!");
-                    return;
-                }
-
-                if (checkIfMaxStack(warehouse.getArea()[widthPointer][lengthPointer])) { // sprawdzenie czy pole pelne -> zmienia wskazniki
-                    // jesli pelny to
-                    if (checkIfEndOfMagazineWidth(widthPointer)) { // jesli koniec szerokosci to przestawiam magazyn
-                        lengthPointer++;
-                        widthPointer = 0;
-                    } else { // w innym wypadku dodajemy tylko szerokosc
-                        widthPointer++;
-                    }
-                }
-
-                if (warehouse.getArea()[widthPointer][lengthPointer].size() == 0) { // sprawdzenie czy puste pole -> od razu wstawia
-                    warehouse.getArea()[widthPointer][lengthPointer].push(pack);
-                    return;
-                }
-
-                if (!checkIfMaxStack(warehouse.getArea()[widthPointer][lengthPointer]) && warehouse.getArea()[widthPointer][lengthPointer].size() > 0) { // jesli mamy jeszcze miejsce na stosie w punkcie [0][0]
-                    Package tempPackage = warehouse.getArea()[widthPointer][lengthPointer].pop();
-                    if(tempPackage.getPriority() <= pack.getPriority()){
-                        warehouse.getArea()[widthPointer][lengthPointer].push(tempPackage);
-                    }
-                    while ( tempPackage.getPriority() > pack.getPriority()) { // jesli temp package jest tej samej wartosci
-                        if (tempPackage.getPriority() == 3) {
-                            lastAreaField.push(tempPackage);
-                            tempPackage.setShiftNumber(tempPackage.getShiftNumber()+1);
-                        }
-                        if (tempPackage.getPriority() == 2) {
-                            nextToLastAreaField.push(tempPackage);
-                            tempPackage.setShiftNumber(tempPackage.getShiftNumber()+1);
-                        }
-                        if(warehouse.getArea()[widthPointer][lengthPointer].empty()){
-                            break;
-                        }
-
-                    }
-                    warehouse.getArea()[widthPointer][lengthPointer].push(pack);// to wstawiamy packe
-                    while (!nextToLastAreaField.empty()) {// i wstaiwamy reszte paczek z przedostatniego pola
-                        tempPackage = nextToLastAreaField.pop();
-                        if (checkIfMaxStack(warehouse.getArea()[widthPointer][lengthPointer])) { // jesli pelny to
-                            if (checkIfEndOfMagazineWidth(widthPointer)) { // jesli koniec szerokosci to przestawiam magazyn
-                                if (checkIfEndOfMagazineLenght(lengthPointer)) {
-                                    craneLogger.info("All warehouse is full!");
-                                    break;
-                                }
-                                lengthPointer++;
-                                widthPointer = 0;
-                            } else { // w innym wypadku dodajemy tylko szerokosc
-                                widthPointer++;
-                            }
-                        }
-                        warehouse.getArea()[widthPointer][lengthPointer].push(tempPackage);
-                        tempPackage.setShiftNumber(tempPackage.getShiftNumber()+1);
-                    }
-                    while (!lastAreaField.empty()) {
-                        tempPackage = lastAreaField.pop();
-
-                        addPackage(tempPackage);
-                        tempPackage.setShiftNumber(tempPackage.getShiftNumber()+1);
-
-                    }
-                    widthPointer = warehouse.getAreaWidth()-1;
-                    lengthPointer = warehouse.getAreaLength()-1;
-                    return;
+                if(!isWarehouseFull(widthPointer,lengthPointer) && warehouse.getArea()[widthPointer][lengthPointer].size() < warehouse.getHeightLimit()){
+                    stackWithEmptySlot = warehouse.getArea()[widthPointer][lengthPointer];
+                    return stackWithEmptySlot;
                 }
             }
         }
+        return stackWithEmptySlot;
     }
 
     public void movePackage(Package packageToMove){
         if(lastAreaField.size()==0){
             lastAreaField.push(packageToMove);
+            packageToMove.setShiftNumber(packageToMove.getShiftNumber()+1);
             return;
         }
 
         if(lastAreaField.size()>0 && nextToLastAreaField.size() == 0){
             if(packageToMove.getPriority() < lastAreaField.peek().getPriority()){ // jesli paczka ktora chcemy wstawic ma mniejszy priorytet
                 nextToLastAreaField.push(packageToMove);
+                packageToMove.setShiftNumber(packageToMove.getShiftNumber()+1);
                 return;
             }
             else{
                 lastAreaField.push(packageToMove);
+                packageToMove.setShiftNumber(packageToMove.getShiftNumber()+1);
                 return;
             }
         }
@@ -124,10 +75,12 @@ public class Crane {
         if(lastAreaField.size()>0 && nextToLastAreaField.size()>0){ // jesli dwa stosy zajete
             if(packageToMove.getPriority() == lastAreaField.peek().getPriority()){
                 lastAreaField.push(packageToMove);
+                packageToMove.setShiftNumber(packageToMove.getShiftNumber()+1);
                 return;
             }
             if(packageToMove.getPriority() == nextToLastAreaField.peek().getPriority()){
                 nextToLastAreaField.push(packageToMove);
+                packageToMove.setShiftNumber(packageToMove.getShiftNumber()+1);
                 return;
             }
             if((packageToMove.getPriority() < lastAreaField.peek().getPriority()) && (packageToMove.getPriority() < nextToLastAreaField.peek().getPriority())){ // najbardziej zaglebiona -> jesli dwa zajete i priorytet wstawiania mniejszy od dwojga
@@ -155,21 +108,6 @@ public class Crane {
         return null;
     }
 
-    public Stack<Package> getStackWithSearchedPackage(String packageNumber){
-        for (int lengthPointer = 0; lengthPointer < warehouse.getAreaLength(); lengthPointer++) {
-            for (int widthPointer = 0; widthPointer < warehouse.getAreaWidth(); widthPointer++) {
-                List<Package> searchList = (List<Package>) warehouse.getArea()[widthPointer][lengthPointer];
-                for(int listIterator = 0 ; listIterator<searchList.size(); listIterator++){
-                    if(searchList.get(listIterator).getPackageNumber().equalsIgnoreCase(packageNumber)){
-                        return warehouse.getArea()[widthPointer][lengthPointer];
-                    }
-
-                }
-            }
-        }
-        return null;
-    }
-
     public List<Package> getAllPackagesByType(EPackage typeOfPackage){
         List<Package> packageListWithProperType = new ArrayList<Package>();
         for (int lengthPointer = 0; lengthPointer < warehouse.getAreaLength(); lengthPointer++) {
@@ -185,20 +123,21 @@ public class Crane {
         return packageListWithProperType;
     }
 
-    public static void main(String[] args) {
-        Warehouse warehouse = new Warehouse(4,4,2);
-        Stack<Package> exampleStack = new Stack<Package>();
-        warehouse.getArea()[0][0] = exampleStack;
+    public Stack<Package> getStackWithSearchedPackage(String packageNumber){
+        for (int lengthPointer = 0; lengthPointer < warehouse.getAreaLength(); lengthPointer++) {
+            for (int widthPointer = 0; widthPointer < warehouse.getAreaWidth(); widthPointer++) {
+                List<Package> searchList = (List<Package>) warehouse.getArea()[widthPointer][lengthPointer];
+                for(int listIterator = 0 ; listIterator<searchList.size(); listIterator++){
+                    if(searchList.get(listIterator).getPackageNumber().equalsIgnoreCase(packageNumber)){
+                        return warehouse.getArea()[widthPointer][lengthPointer];
+                    }
 
-        Package tempPackage = new Package("1aa",2,0,"first Car Part","02/13/2017", EPackage.CarParts);
-        Package tempPackage2 = new Package("2aa",1,0,"first Car Part","02/13/2017", EPackage.CarParts);
-        Crane crane = new Crane(warehouse);
-        crane.addPackage(tempPackage);
-        crane.addPackage(tempPackage2);
-
-        System.out.println(crane.getPackageByNumber("12aa"));
-        System.out.println(crane.getAllPackagesByType(EPackage.Furnitures));
+                }
+            }
+        }
+        return null;
     }
+
 
     public void insertPopedPackages(Stack<Package> targetStack){
         if(!lastAreaField.empty() && lastAreaField.peek().getPriority() == 1){
@@ -235,26 +174,29 @@ public class Crane {
         }
     }
 
-    public boolean checkIfMaxStack(Stack<Package> stack){
-        if(stack.size()< warehouse.getHeightLimit()){
-            return false;
+    public void generateAndInsertPackages(int numberOfPackages){
+        int iterator = 0;
+        while(iterator<numberOfPackages){
+            int numberOfPackage = iterator+1;
+            if(iterator%3 == 1){
+                String number = "1" + Integer.toString(numberOfPackage);
+                Package packagePrior1 = new Package(number,1,0,"Car Part","02/13/2017", EPackage.CarParts);
+                addPackage(packagePrior1);
+            }
+            if(iterator%3 == 0){
+                String number = "2" + Integer.toString(numberOfPackage);
+                Package packagePrior2 = new Package(number,2,0,"Toy","03/14/2017", EPackage.Toys);
+                addPackage(packagePrior2);
+            }
+            if(iterator%3 == 2){
+                String number = "3" + Integer.toString(numberOfPackage);
+                Package packagePrior3 = new Package(number,3,0,"Toy","03/14/2017", EPackage.Toys);
+                addPackage(packagePrior3);
+            }
+            iterator++;
         }
-        return true;
     }
 
-    public boolean checkIfEndOfMagazineWidth(int width){
-        if(width == warehouse.getAreaWidth()){
-            return true;
-        }
-        return false;
-    }
-
-    public boolean checkIfEndOfMagazineLenght(int length){
-        if(length==warehouse.getAreaLength()){
-            return true;
-        }
-        return false;
-    }
 
     public boolean isWarehouseFull(int widthPointer, int lengthPointer){
         if(warehouse.getArea()[widthPointer][lengthPointer] == nextToLastAreaField || warehouse.getArea()[widthPointer][lengthPointer] == lastAreaField){

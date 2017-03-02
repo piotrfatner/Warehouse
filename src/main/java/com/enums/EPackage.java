@@ -6,7 +6,8 @@ package com.enums;
 public enum EPackage {
     Toys("toys"),
     Furnitures("furnitures"),
-    CarParts("carParts");
+    CarParts("carParts"),
+    Laptops("laptops");
     private String name;
 
     EPackage(String name) {this.name = name;}

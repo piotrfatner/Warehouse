@@ -65,58 +65,21 @@ public class Warehouse {
         this.crane = crane;
     }*/
 
-    public void appendPackages(){
-        Stack<Package> tempStack = new Stack<Package>();
-        Stack<Package> tempStack2 = new Stack<Package>();
-        Package tempPackage = new Package("1",1,0,"first Car Part","02/13/2017", EPackage.CarParts);
-        Package tempPackage2 = new Package("2",1,0,"second Car Part","02/14/2017",EPackage.CarParts);
-        Package tempPackage3 = new Package("2",1,0,"second Car Part","02/14/2017",EPackage.CarParts);
-        tempStack.push(tempPackage);
-        tempStack.push(tempPackage2);
-        tempStack2.push(tempPackage3);
-        this.getArea()[0][0]=tempStack;
-        this.getArea()[1][0]= tempStack2;
-
-    }
-
-    /*public String toStrings(){
-        Logger log = Logger.getLogger(Warehouse.class);
-
-        *//*
-        log.info("first capasity: "+area[1][1].size());
-        log.info("second stack: "+area[1][2].size());
-        Package retPackage = area[1][1].pop();
-        log.info("second capacity: "+area[1][1].size());*//*
-        return "cos";
-        *//*int levels = 0;
-        StringBuilder levelMap=new StringBuilder();
-        while(levels<height){
-            for(int j=0;j<length;j++){
-                for(int i=0;i<width;i++){
-                    levelMap.append("X");
-                }
-                levelMap.append("\n");
-            }
-            levelMap.append("\n\n");
-            levels++;
-        }
-        return levelMap.toString();*//*
-    }*/
 
     public String toString(){
         StringBuilder warehouseMap=new StringBuilder();
         for(int p=0;p<areaWidth;p++){
-            warehouseMap.append("   ");
+            warehouseMap.append("      ");
             warehouseMap.append(p+1);
         }
         for(int j=0;j<areaLength;j++){
-            warehouseMap.append("\n").append(j+1);
+            warehouseMap.append("\n").append(j+1).append("  ");
             for(int i=0;i<areaWidth;i++){
                 if(area[i][j].size()>0){
                     Stack<Package> tempStack = new Stack<Package>();
                     tempStack.addAll(area[i][j]);
                     while(!tempStack.empty()){
-                        warehouseMap.append("-> ").append(tempStack.pop().toString());
+                        warehouseMap.append(tempStack.pop().toString()).append(" -> ");
                     }
 
                     warehouseMap.append("||     ");
@@ -130,6 +93,26 @@ public class Warehouse {
 
         }
 
+        return warehouseMap.toString();
+    }
+
+
+    public String toString2(){
+        StringBuilder warehouseMap=new StringBuilder();
+
+        for(int j=0;j<areaLength;j++){
+            for(int i=0;i<areaWidth;i++){
+                if(area[i][j].size()>0){
+                    warehouseMap.append("Field: ").append(j+1).append(" - ").append(i+1).append(":  ");
+                    Stack<Package> tempStack = new Stack<Package>();
+                    tempStack.addAll(area[i][j]);
+                    while(!tempStack.empty()){
+                        warehouseMap.append(tempStack.pop().toString()).append(" -> ");
+                    }
+                    warehouseMap.append("\n");
+                }
+            }
+        }
         return warehouseMap.toString();
     }
 
